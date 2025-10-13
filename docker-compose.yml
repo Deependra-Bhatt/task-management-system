@@ -1,0 +1,58 @@
+services:
+  # 1. MongoDB Service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_task_manager
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      # These variables set up a simple username/password for the database
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      # Persist data across container restarts
+      - mongo-data:/data/db
+
+  # 2. Flask Backend Service
+  backend:
+    build:
+      context: ./backend # Path to Dockerfile
+      dockerfile: Dockerfile
+    container_name: task_manager_backend
+    environment:
+      # Pass environment variables needed by Flask from the root .env file
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB: ${MONGO_DB}
+      DB_HOST: mongodb # Use the service name defined above
+      DB_PORT: ${DB_PORT}
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount source code for development (optional, remove for prod)
+      - ./backend:/usr/src/app/backend
+      # Persist file uploads locally within the container volume
+      - backend-uploads:/usr/src/app/backend/uploads
+    depends_on:
+      - mongodb
+
+  # 3. React Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: task_manager_frontend
+    # Map the container port 80 to a local port 3000 (React standard)
+    ports:
+      - "3000:80"
+    # Ensure it starts after the backend is available
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+  backend-uploads:

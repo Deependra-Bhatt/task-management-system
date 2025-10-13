@@ -1,0 +1,23 @@
+# General
+.env
+.DS_Store
+# Temporary files created by text editors, etc.
+*~
+*.log
+/htmlcov/
+
+# Python/Flask
+/backend/venv
+__pycache__
+*.pyc
+# Flask-PyMongo specific files (often created for sessions/gridfs)
+# File uploads (crucial, as these files can be large and are persisted via a volume)
+/backend/uploads/ 
+/backend/__pycache__/
+.pytest_cache/
+
+# Node/React
+/frontend/node_modules
+/frontend/build
+/frontend/.env.local
+/frontend/npm-debug.log
