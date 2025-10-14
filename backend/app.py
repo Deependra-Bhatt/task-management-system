@@ -1,5 +1,6 @@
 from flask import Flask
 from config import DevelopmentConfig
+from flask_cors import CORS  # If you installed this
 from src import bcrypt, mongo, jwt
 import os
 from dotenv import load_dotenv
@@ -8,6 +9,10 @@ from dotenv import load_dotenv
 def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Initialize CORS here, before other extensions or blueprints are registered
+    # The 'origins' key specifies the exact frontend URL allowed to access the API.
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
     # Initialize extensions with the app
     mongo.init_app(app)
@@ -19,14 +24,17 @@ def create_app(config_class=DevelopmentConfig):
 
     # --- Register Blueprints ---
     from src.auth.controllers import auth_bp
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
     # Register the new User Blueprint
     from src.users.controllers import users_bp
+
     app.register_blueprint(users_bp, url_prefix="/api/users")
 
     from src.tasks.controllers import tasks_bp
-    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
+
+    app.register_blueprint(tasks_bp, url_prefix="/api/tasks")
     # ...
 
     # Basic route for testing

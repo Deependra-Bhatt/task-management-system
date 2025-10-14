@@ -14,7 +14,7 @@ TaskCollection = get_task_collection()
 
 
 # --- 1. LIST TASKS (Filtering, Sorting, Pagination) ---
-@tasks_bp.route("/", methods=["GET"])
+@tasks_bp.route("", methods=["GET"])
 @jwt_required()
 def list_tasks():
     """
@@ -92,7 +92,7 @@ def check_task_ownership_or_admin(task):
 
 
 # --- 1. CREATE Task ---
-@tasks_bp.route("/", methods=["POST"])
+@tasks_bp.route("", methods=["POST"])
 @jwt_required()
 def create_task():
     """Create a new task, handling multi-part form data for files."""
@@ -126,15 +126,46 @@ def create_task():
         return jsonify({"msg": str(e)}), 400
 
     # 3. Construct Task Data
+
+    # --- FIX START (Corrected Logic) ---
+
+    # 1. Retrieve the input value (will be a string or None)
+    assigned_to_input = data.get("assigned_to")
+
+    # 2. Determine the final non-empty ID string
+    # If the input is empty or None, use the current user_id from JWT.
+    if not assigned_to_input:
+        final_assigned_id_str = user_id
+    else:
+        # If the input exists, use it.
+        final_assigned_id_str = assigned_to_input
+
+    # 3. Safely convert the final, non-empty ID string to ObjectId
+    try:
+        assigned_to_objectid = ObjectId(final_assigned_id_str)
+    except Exception:
+        # Catch case where a malformed string (e.g., "hello") was sent
+        return jsonify({"msg": "Invalid Assigned To User ID format"}), 400
+
+    # 4. Safely convert created_by ID (which is guaranteed to be valid from JWT)
+    try:
+        created_by_objectid = ObjectId(user_id)
+    except Exception:
+        return jsonify({"msg": "Invalid Creator User ID format"}), 500
+
+    # --- FIX END (Corrected Logic) ---
+
     new_task = {
         "title": title,
         "description": description,
-        "status": data.get("status", TASK_STATUSES[0]),  # Default to "To Do"
-        "priority": data.get("priority", TASK_PRIORITIES[0]),  # Default to "Low"
+        "status": data.get("status", TASK_STATUSES[0]),
+        "priority": data.get("priority", TASK_PRIORITIES[0]),
         "due_date": due_date,
-        "assigned_to": ObjectId(assigned_to_id),  # Store as MongoDB ObjectId
+        # --- APPLY FIX HERE ---
+        "assigned_to": assigned_to_objectid,
+        "created_by": created_by_objectid,  # Record the creator
+        # ---------------------
         "attached_documents": attached_documents,
-        "created_by": ObjectId(user_id),  # Record the creator
     }
 
     # 4. Insert and Respond

@@ -5,6 +5,8 @@ from flask import current_app
 from io import BytesIO
 from werkzeug.datastructures import FileStorage
 from src.tasks.models import get_task_collection
+from bson.objectid import ObjectId  # <-- ADD THIS LINE
+
 
 # Fixtures are auto-injected: client, get_auth_token_for, cleanup_db
 
@@ -178,6 +180,7 @@ def test_task_download_document_success(client, user_auth, app):
     )
 
     # Cleanup the test file
+    response.close()  # <-- ADD THIS LINE
     os.remove(mock_filepath)
 
 

@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from src import bcrypt  # Import bcrypt for hashing
 from .models import get_user_by_email, get_user_collection
-from bson.objectid import ObjectId  # Used to convert string IDs to MongoDB ObjectId
+from bson.objectid import ObjectId  # Used to convert string IDs to MongoDB
+from flask_jwt_extended import jwt_required, get_jwt  # Add get_jwt
+from src import BLACKLIST  # Import the global blacklist set from your __init__.py
+
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -58,6 +61,9 @@ def login():
     password = data.get("password")
 
     user = get_user_by_email(email)
+    print(
+        f"Attempted login for: {email}. Password check result: {bcrypt.check_password_hash(user['password'], password) if user else False}"
+    )
 
     # Check user existence and password validity
     if user and bcrypt.check_password_hash(user["password"], password):
@@ -83,3 +89,15 @@ def login():
         )
     else:
         return jsonify({"msg": "Invalid credentials"}), 401
+
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """Revokes the current JWT token by adding its JTI to the global blocklist."""
+    jti = get_jwt()["jti"]
+
+    # Add the token's unique ID to the set, instantly invalidating it.
+    BLACKLIST.add(jti)
+
+    return jsonify({"msg": "Successfully logged out and token revoked"}), 200

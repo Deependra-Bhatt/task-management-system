@@ -29,8 +29,11 @@ class Config:
 
     # Use f-string only if user/password are properly escaped (which they aren't by default here)
     # The error usually happens when environment variables are not set, and the f-string fails
+    
     # We will fix this properly in DevelopmentConfig for local use.
     # MONGO_URI = f"mongodb://{_MONGO_USER}:{_MONGO_PASSWORD}@{_DB_HOST}:{_DB_PORT}/{_MONGO_DB}?authSource=admin"
+    
+    # for localhost
     MONGO_URI = f"mongodb://{DEFAULT_DB_HOST}:{DEFAULT_DB_PORT}/{DEFAULT_MONGO_DB}"
 
     # JWT Configuration
@@ -54,3 +57,18 @@ class DevelopmentConfig(Config):
 
 
 # --- CHANGES END HERE ---
+
+
+class TestConfig(Config):
+    """Configuration for testing purposes."""
+
+    TESTING = True
+
+    MONGO_DB = "task_management_test_db" 
+
+    # IMPORTANT: Use a dedicated, disposable test database name!
+    # This assumes no authentication is needed for a local MongoDB test instance.
+    MONGO_URI = "mongodb://localhost:27017/task_management_test_db"
+
+    # You might also want to disable JWT expiration for tests
+    JWT_ACCESS_TOKEN_EXPIRES = False

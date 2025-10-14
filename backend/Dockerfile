@@ -1,33 +1,28 @@
-# Stage 1: Build Stage (Optional, but good practice for dependency installation)
-FROM python:3.10-slim as builder
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
-# Set the working directory
-WORKDIR /usr/src/app/backend
+# Set the working directory in the container
+WORKDIR /app
 
-# Install dependencies (to leverage Docker layer caching)
-COPY requirements.txt .
+# Copy the requirements file into the container
+COPY requirements.txt /app/requirements.txt
+
+# Install dependencies (use --no-cache-dir for slim image efficiency)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Final Image
-FROM python:3.10-slim
+# Copy the rest of the application source code into the container
+COPY . /app
 
-# Set the working directory
-WORKDIR /usr/src/app/backend
+# Expose the port the app runs on (Flask default is 5000)
+EXPOSE 5000
 
-# Copy installed dependencies from the builder stage
-COPY --from=builder /usr/src/app/backend/venv /usr/local/venv
-# Set environment variable for VENV path
-ENV PATH="/usr/local/venv/bin:$PATH"
+# Set environment variables for Gunicorn and Flask
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV GUNICORN_CMD="gunicorn --bind 0.0.0.0:5000 wsgi:app"
 
-# Copy the rest of the source code
-COPY . .
-
-# Create the uploads directory for local file storage
-RUN mkdir -p uploads
-
-# Command to run the application
-# We use Gunicorn or Waitress for production, but for simplicity, we use Flask's built-in server here
-# CMD ["python", "app.py"] 
-
-# NOTE: For deployment, replace the above with Gunicorn:
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:create_app()"]
+# Command to run the application using Gunicorn (a production WSGI server)
+# NOTE: You'll need to install Gunicorn in requirements.txt (pip install gunicorn)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:create_app()"]
+# If using a wsgi.py file, the command would be: CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app"]
+# Assuming your app entry point is app.py and the create_app function.

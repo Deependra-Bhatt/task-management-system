@@ -1,58 +1,53 @@
+
 services:
-  # 1. MongoDB Service
   mongodb:
     image: mongo:latest
-    container_name: mongodb_task_manager
+    container_name: task-manager-mongo
     restart: always
+    volumes:
+      # Persist MongoDB data outside the container
+      - mongo_data:/data/db
     ports:
+      # Map the MongoDB port to the host (needed for development tools)
       - "27017:27017"
     environment:
-      # These variables set up a simple username/password for the database
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
-    volumes:
-      # Persist data across container restarts
-      - mongo-data:/data/db
+      # Set the default database name for MongoDB (optional, can be done via URI)
+      MONGO_INITDB_DATABASE: task_management_db
 
-  # 2. Flask Backend Service
   backend:
     build:
-      context: ./backend # Path to Dockerfile
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: task_manager_backend
+    container_name: task-manager-backend
+    restart: on-failure
     environment:
-      # Pass environment variables needed by Flask from the root .env file
-      SECRET_KEY: ${SECRET_KEY}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DB: ${MONGO_DB}
-      DB_HOST: mongodb # Use the service name defined above
-      DB_PORT: ${DB_PORT}
+      # --- IMPORTANT: MongoDB URI for the container network ---
+      # The host name must be the service name 'mongodb'
+      MONGO_URI: mongodb://mongodb:27017/task_management_db
+      # You can add other environment vars like SECRET_KEY here:
+      JWT_SECRET_KEY: jwt-super-secret-docker
+      SECRET_KEY: default_secret_key
     ports:
+      # Map container port 5000 to host port 5000
       - "5000:5000"
-    volumes:
-      # Mount source code for development (optional, remove for prod)
-      - ./backend:/usr/src/app/backend
-      # Persist file uploads locally within the container volume
-      - backend-uploads:/usr/src/app/backend/uploads
     depends_on:
       - mongodb
+    # Command is specified in Dockerfile, but you can override here if needed:
+    command: gunicorn --bind 0.0.0.0:5000 --timeout 90 app:create_app()
 
-  # 3. React Frontend Service
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: task_manager_frontend
-    # Map the container port 80 to a local port 3000 (React standard)
+    container_name: task-manager-frontend
+    restart: always
     ports:
+      # Map Nginx port 80 to host port 3000 (standard React dev port)
       - "3000:80"
-    # Ensure it starts after the backend is available
     depends_on:
       - backend
+    # You might need to set an environment variable here if your frontend
+    # needs to explicitly know the backend URL, though Axios should use relative paths if run locally.
 
 volumes:
-  mongo-data:
-  backend-uploads:
+  mongo_data:
