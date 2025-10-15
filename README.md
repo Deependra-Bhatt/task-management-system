@@ -1,144 +1,110 @@
-Task Management System
-This repository contains a full-stack, authenticated Task Management System built with a Flask API (Python) backend and a React (JavaScript) frontend, using MongoDB for persistence.
+# Task Management System
 
-The entire application is containerized using Docker Compose, providing a consistent development and deployment environment.
+This is a modular, full-stack Task Management System featuring authenticated CRUD operations, built for portability using Docker Compose. The system consists of a **Flask API backend** and a **React SPA frontend** with **MongoDB** for persistence.
 
-🚀 Quick Start (Docker Compose)
-Follow these steps to get the entire application stack running quickly.
+## Core Features
 
-Prerequisites
-Git: Installed on your machine.
+- **Authentication & Access Control:** JWT-based login/registration with Role-Based Access Control (RBAC).
+- **Task Management:** Complete CRUD functionality with filtering, sorting, and pagination (FSP).
+- **File Handling:** Secure upload and retrieval of PDF documents.
+- **Data Integrity:** Cascading deletion of associated tasks when a user account is removed.
 
-Docker Desktop: Installed and running (required for Docker and Docker Compose).
+---
 
-1. Clone the Repository
-   git clone <repository-url>
-   cd task-management-system
+## 💻 Project Architecture and Stack
 
-2. Configure Environment
-   Create a file named .env in the root directory (task-management-system/) to define critical environment variables used by the backend service.
+### Backend Stack
 
-# .env file content (Add your actual secrets if deploying to production)
+| Component          | Technology                     | Role                                        |
+| :----------------- | :----------------------------- | :------------------------------------------ |
+| **Framework**      | Python 3.12, **Flask**         | RESTful API, Routing, and Business Logic.   |
+| **Authentication** | Flask-JWT-Extended, **Bcrypt** | JWT issuance and password hashing.          |
+| **Data Access**    | **Flask-PyMongo**              | MongoDB client and integration.             |
+| **Server**         | **Gunicorn**                   | Production-ready WSGI server within Docker. |
+
+### Frontend Stack
+
+| Component      | Technology            | Role                                                          |
+| :------------- | :-------------------- | :------------------------------------------------------------ |
+| **Framework**  | **React.js**          | Single-Page Application (SPA) development.                    |
+| **State**      | **Redux Toolkit**     | Centralized state management and asynchronous logic (Thunks). |
+| **UI/Styling** | **Material-UI (MUI)** | Component library for consistent, modern interface design.    |
+| **Networking** | **Axios**             | HTTP client for communicating with the Flask API.             |
+
+---
+
+## 🚀 Quick Start (Docker Compose)
+
+The entire stack can be launched using Docker Compose from the root directory.
+
+### Prerequisites
+
+- Git
+- Docker Desktop (must be running)
+
+### 1. Setup and Cloning
+
+```bash
+git clone [repository-url]
+cd task-management-system
+```
+
+### 2\. Configure Environment
+
+Create a file named **`.env`** in the root directory to define necessary secrets and MongoDB credentials. **These credentials enable authenticated access to the MongoDB service.**
+
+```bash
+# .env file content
 
 # --- Flask/JWT Configuration ---
-
 SECRET_KEY=your_very_secret_key_change_me
 JWT_SECRET_KEY=your_jwt_signing_key_change_me
 
-# --- MongoDB Configuration (Used internally by Flask/Docker) ---
-
-# NOTE: The MONGO_URI in docker-compose.yml overrides this for the container,
-
-# but it's good practice to keep them synced for local CLI testing.
-
-MONGO_USER=admin
-MONGO_PASSWORD=password
+# --- MongoDB Authentication ---
+MONGO_USER=taskuser
+MONGO_PASSWORD=strongpassword
+MONGO_DB=task_management_db
 DB_HOST=mongodb
 DB_PORT=27017
-MONGO_DB=task_management_db
+```
 
-3. Build and Run Services
-   Run the following command from the project root directory (task-management-system/):
+### 3\. Build and Run Services
 
+Execute the following command to build the images and launch the three services (`mongodb`, `backend`, `frontend`):
+
+```bash
 docker compose up --build -d
+```
 
-Command Argument
+| Argument  | Purpose                                        |
+| :-------- | :--------------------------------------------- |
+| `--build` | Forces a rebuild of the Docker images.         |
+| `-d`      | Runs containers in detached (background) mode. |
 
-Purpose
+---
 
---build
+## 🌐 Application Access and API
 
-Forces Docker to rebuild the images from the Dockerfiles (essential for the first run).
+The services are exposed on the host machine via the following addresses:
 
--d
+| Service         | Address                 | Notes                               |
+| :-------------- | :---------------------- | :---------------------------------- |
+| **Frontend UI** | `http://localhost:3000` | Access the application dashboard.   |
+| **Backend API** | `http://localhost:5000` | Base URL for all RESTful API calls. |
 
-Runs the containers in detached mode (in the background).
+### API Documentation and Postman
 
-🌐 Application Access
-Once all services are up and running (this may take a moment on the first build):
+The complete set of API endpoints, including setup and test data, is available via the **Postman Collection** located in the repository source. This collection defines all endpoints for Authentication, Task CRUD, and Admin User Management.
 
-Service
+---
 
-Address
+## 🐳 Docker Management Commands
 
-Notes
+Use these commands from the project root directory for container control:
 
-Frontend (React)
-
-http://localhost:3000
-
-Access the Task Dashboard UI here.
-
-Backend API (Flask)
-
-http://localhost:5000
-
-The REST API base URL.
-
-Database (MongoDB)
-
-mongodb://localhost:27017
-
-Accessible for external tools (e.g., MongoDB Compass).
-
-⚙️ Project Structure & Architecture
-The application is structured as a modular mono-repository:
-
-Directory
-
-Service
-
-Technology
-
-Description
-
-backend/
-
-backend
-
-Flask, PyMongo, JWT
-
-Provides the REST API for CRUD operations, authentication, and file management.
-
-frontend/
-
-frontend
-
-React, Redux Toolkit, MUI
-
-Single-page application (SPA) providing the user interface.
-
-mongodb/
-
-mongodb
-
-Mongo DB
-
-Database service for data persistence.
-
-🐳 Docker Management Commands
-Use these commands from the project root directory (task-management-system/):
-
-Command
-
-Description
-
-docker compose ps
-
-View the status of all running services.
-
-docker compose logs [service_name]
-
-View real-time logs for a specific service (e.g., backend).
-
-docker compose stop
-
-Gracefully stop the running containers.
-
-docker compose down
-
-Stops and removes containers, networks, and volumes (use with caution).
-
-docker compose exec backend bash
-
-Get a shell inside the running backend container for debugging.
+| Command                         | Description                                                                               |
+| :------------------------------ | :---------------------------------------------------------------------------------------- |
+| `docker compose ps`             | View the status of all containers.                                                        |
+| `docker compose logs [service]` | View real-time logs for a specific service (e.g., `backend`).                             |
+| `docker compose stop`           | Gracefully stop running containers.                                                       |
+| `docker compose down`           | Stops and removes containers, networks, and volumes (use `-v` to remove persistent data). |
