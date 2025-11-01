@@ -1,23 +1,52 @@
-# General
+# -------------------------
+# GENERAL & SYSTEM
+# -------------------------
+# Environment files (CRITICAL - keeps secrets out of repo)
 .env
+.env.*
 .DS_Store
-# Temporary files created by text editors, etc.
-*~
 *.log
+npm-debug.log
+
+# IDE/Editor Files
+*~
+.vscode/
+
+# -------------------------
+# DOCKER & CONTAINERS
+# -------------------------
+# Docker images, volumes, and temporary files
+target/
+.dockerignore
+# Ignore compiled Docker images and container network config (if created outside compose)
+*.stack.yml
+*.dockerfile
+# Ignore all Docker build context folders (backend/frontend/ etc. if copied)
+# but we rely on Dockerfiles/docker-compose to handle the build.
+
+# -------------------------
+# PYTHON / FLASK (backend/)
+# -------------------------
+# Python Virtual Environment
+/backend/venv/
+# Byte-code and temporary files
+__pycache__/
+*.pyc
+# Flask/Python/Gunicorn log files
+*.log
+# File uploads (CRITICAL - persisted via volume, not source control)
+/backend/uploads/
+# Testing artifacts
+.pytest_cache/
 /htmlcov/
 
-# Python/Flask
-/backend/venv
-__pycache__
-*.pyc
-# Flask-PyMongo specific files (often created for sessions/gridfs)
-# File uploads (crucial, as these files can be large and are persisted via a volume)
-/backend/uploads/ 
-/backend/__pycache__/
-.pytest_cache/
-
-# Node/React
-/frontend/node_modules
-/frontend/build
+# -------------------------
+# NODE / REACT (frontend/)
+# -------------------------
+# Dependencies
+/frontend/node_modules/
+# Build artifacts (created by 'npm run build' - served by Nginx container)
+/frontend/build/
+# Local environment variables and temporary files
 /frontend/.env.local
-/frontend/npm-debug.log
+/frontend/.eslintcache

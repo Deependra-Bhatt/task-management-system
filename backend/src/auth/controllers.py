@@ -16,7 +16,7 @@ def register():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-    # Default role is 'user'. [cite_start]Admin role must be set explicitly by an admin later. [cite: 19]
+    # Default role is 'user'. Admin role must be set explicitly by an admin later.
     role = "user"
 
     if not email or not password:
@@ -25,13 +25,13 @@ def register():
     if get_user_by_email(email):
         return jsonify({"msg": "User already exists"}), 409
 
-    # [cite_start]Password Hashing [cite: 17]
+    # Password Hashing
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
 
     user_data = {
         "email": email,
         "password": hashed_password,
-        "role": role,  # Users should have attributes: email, password, role. [cite: 35]
+        "role": role,  # Users should have attributes: email, password, role.
     }
 
     try:
